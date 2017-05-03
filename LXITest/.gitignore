@@ -27,12 +27,3 @@
 *.exe
 *.out
 *.app
-
-# VS.NET
-.vs
-Debug
-Release
-ipch
-*.opendb
-*.db
-
