@@ -24,53 +24,100 @@
 
 #include "stdafx.h"
 
+#include "DG1022z.h"
 #include "MX100.h"
+
+#include <functional>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //											MAIN
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-int main()
+class InstrumentTester
 {
-	try
+public:
+	InstrumentTester()
+		: dg1022z(my_io_service, "192.168.1.123", 5555)
+	    //, mx100tp(my_io_service, "192.168.1.125", 9221)
 	{
-		io_service my_io_service;
-		MX100 mx100tp(my_io_service, "192.168.1.125", 9221);
-		cout << "IDN:    " << mx100tp.getIdentification() << std::endl;
 
-		//if (mx100tp.lockInterface(true))
+	}
+
+	void run(void)
+	{
+		std::thread th([this]() {this->myThread(); });
+		if (th.joinable())
+			th.join();
+	}
+
+private:
+	void myThread(void)
+	{
+		try
 		{
-			cout << "CONFIG: " << mx100tp.getConfig() << std::endl;
-			mx100tp.setConfig(MX100::Config::Unlinked);
-			cout << "CONFIG: " << mx100tp.getConfig() << std::endl;
+			io_service my_io_service;
+			DG1022z dg1022z(my_io_service, "192.168.1.123", 5555);
+			//MX100 mx100tp(my_io_service, "192.168.1.125", 9221);
 
-			mx100tp.channel(MX100::ChannelId::CHAN1).setVoltage(1.001f);
-			mx100tp.channel(MX100::ChannelId::CHAN2).setVoltage(2.12f);
-			mx100tp.channel(MX100::ChannelId::CHAN3).setVoltage(3.23f);
+		//	cout << "IDN:    " << mx100tp.getIdentification() << std::endl;
+			cout << "IDN:    " << dg1022z.getIdentification() << std::endl;
 
-			cout << "V1: " << mx100tp.channel(MX100::ChannelId::CHAN1).getVoltage() << std::endl;
-			cout << "V2: " << mx100tp.channel(MX100::ChannelId::CHAN2).getVoltage() << std::endl;
-			cout << "V3: " << mx100tp.channel(MX100::ChannelId::CHAN3).getVoltage() << std::endl;
+			dg1022z[DG1022z::ChannelId::CHAN1].enable(true);
+			dg1022z[DG1022z::ChannelId::CHAN2].enable(false);
+			dg1022z[DG1022z::ChannelId::CHAN1].setVoltage(2);
+			dg1022z[DG1022z::ChannelId::CHAN2].setVoltage(3.25);
+			dg1022z[DG1022z::ChannelId::CHAN1].setFrequency(1000000);
+			dg1022z[DG1022z::ChannelId::CHAN2].setFrequency(24000000);
 
-			mx100tp[MX100::ChannelId::CHAN1].enable(true);
-			mx100tp[MX100::ChannelId::CHAN2].enable(true);
-			mx100tp[MX100::ChannelId::CHAN3].enable(true);
+			cout << "O1: " << dg1022z[DG1022z::ChannelId::CHAN1].isEnabled() << " Voltage: " << dg1022z[DG1022z::ChannelId::CHAN1].getVoltage() << std::endl;
+			cout << "O2: " << dg1022z[DG1022z::ChannelId::CHAN2].isEnabled() << " Voltage: " << dg1022z[DG1022z::ChannelId::CHAN2].getVoltage() << std::endl;
 
-			this_thread::sleep_for(chrono::seconds(2));
+#if 0
+			//if (mx100tp.lockInterface(true))
+			{
+				cout << "CONFIG: " << mx100tp.getConfig() << std::endl;
+				mx100tp.setConfig(MX100::Config::Unlinked);
+				cout << "CONFIG: " << mx100tp.getConfig() << std::endl;
 
-			mx100tp[MX100::ChannelId::CHAN1].enable(false);
-			mx100tp[MX100::ChannelId::CHAN2].enable(false);
-			mx100tp[MX100::ChannelId::CHAN3].enable(false);
+				mx100tp.channel(MX100::ChannelId::CHAN1).setVoltage(1.001f);
+				mx100tp.channel(MX100::ChannelId::CHAN2).setVoltage(2.12f);
+				mx100tp.channel(MX100::ChannelId::CHAN3).setVoltage(3.23f);
 
-		//	mx100tp.lockInterface(false);
+				cout << "V1: " << mx100tp.channel(MX100::ChannelId::CHAN1).getVoltage() << std::endl;
+				cout << "V2: " << mx100tp.channel(MX100::ChannelId::CHAN2).getVoltage() << std::endl;
+				cout << "V3: " << mx100tp.channel(MX100::ChannelId::CHAN3).getVoltage() << std::endl;
+
+				mx100tp[MX100::ChannelId::CHAN1].enable(true);
+				mx100tp[MX100::ChannelId::CHAN2].enable(true);
+				mx100tp[MX100::ChannelId::CHAN3].enable(true);
+
+				this_thread::sleep_for(chrono::seconds(2));
+
+				mx100tp[MX100::ChannelId::CHAN1].enable(false);
+				mx100tp[MX100::ChannelId::CHAN2].enable(false);
+				mx100tp[MX100::ChannelId::CHAN3].enable(false);
+
+				//	mx100tp.lockInterface(false);
+			}
+			cout << "LOCAL   " << std::endl;
+			mx100tp.sendCommand("LOCAL");
+#endif
 		}
-		cout << "LOCAL   " << std::endl;
-		mx100tp.sendCommand("LOCAL");
+		catch (std::exception& e)
+		{
+			std::cerr << "Exception: " << e.what() << "\n";
+		}
 	}
-	catch (std::exception& e)
-	{
-		std::cerr << "Exception: " << e.what() << "\n";
-	}
+
+protected:
+	io_service my_io_service;
+	DG1022z	   dg1022z;
+//	MX100      mx100tp;
+};
+
+int main(void)
+{
+	InstrumentTester().run();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

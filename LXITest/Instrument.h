@@ -41,12 +41,12 @@ using namespace boost::asio;
 class SCPIInstrument
 {
 public:
-	SCPIInstrument(io_service& ioService, const std::string& host, int port)
+	SCPIInstrument(io_service& ioService, const std::string& host, int port, const std::string& separator = "\n")
 		: mIoService(ioService)
 		, mHost(host)
 		, mPort(port)
 		, mSocket(ioService)
-		, mSeparator("\r\n")
+		, mSeparator(separator)
 	{
 		char buffer[10];
 		ip::tcp::resolver resolver(mIoService);

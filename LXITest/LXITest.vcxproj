@@ -153,6 +153,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DG1022z.h" />
     <ClInclude Include="Instrument.h" />
     <ClInclude Include="MX100.h" />
     <ClInclude Include="stdafx.h" />

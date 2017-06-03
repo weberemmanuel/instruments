@@ -38,7 +38,7 @@ public:
 	};
 
 	MX100(io_service& ioService, const std::string& host, int port)
-		: SCPIInstrument(ioService, host, port)
+		: SCPIInstrument(ioService, host, port,"\r\n")
 		, m_Channel{ { *this,1 },{ *this,2 },{ *this,3 } }
 	{
 	}
